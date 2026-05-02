@@ -56,9 +56,13 @@ import { NextResponse } from 'next/server';
 // authorization page (OAuth or API key form) and returns to the success URL
 // after they authorize. The end_user is identified by `external_ref` — replace
 // the hardcoded value below with your actual user ID lookup (session, JWT, etc).
+//
+// Default `__dev__` matches the alias `self` on your MCP URL: connections
+// authorized in dev are immediately visible inside Claude Desktop / your MCP
+// client. Once you have real customers, swap for your session user ID.
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const externalRef = url.searchParams.get('user_id') ?? 'demo-user';
+  const externalRef = url.searchParams.get('user_id') ?? '__dev__';
 
   // 1. Ensure the end_user exists in Connector Platform (idempotent).
   const userRes = await fetch(`${process.env.CONNECTOR_BASE_URL}/v1/users`, {
@@ -132,7 +136,13 @@ export async function POST(req: Request) {
 }
 ```
 
-## Step 6 — Confirm to the user
+## Step 6 — Check if connector uses OAuth (BYO advisory)
+
+Inspect the connector's manifest from step 2 — `versions[0].manifest.auth.type`.
+
+If `auth.type === 'oauth2'`, append the BYO advisory paragraph in the confirmation reply (step 7). Otherwise (api_key / personal_token), skip it.
+
+## Step 7 — Confirm to the user
 
 Reply:
 
@@ -165,4 +175,17 @@ To call a tool from your code:
   })
 ```
 
-Don't forget: `external_ref` in the connect handler is hardcoded as `'demo-user'` for the demo. Replace it with your real session user id.
+Defaults: `external_ref` in the connect handler is `'__dev__'` — same alias as `/self` on your MCP URL, so connections show up inside Claude Desktop / your MCP client immediately. For real customers, swap with your session user ID lookup.
+
+If `auth.type === 'oauth2'` for this connector, also append:
+
+```
+Heads up — <slug> uses OAuth and you're currently sharing the platform's OAuth app.
+That's fine for development, but before going to production:
+
+  1. Register your own OAuth app at the provider's developer console
+     (e.g. github.com/settings/developers for github).
+  2. Configure it at https://connector-portal.plataform-connect.workers.dev/builder/oauth-apps/<slug>
+
+This unlocks dedicated rate limits and a consent screen branded as your company.
+```

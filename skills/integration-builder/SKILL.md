@@ -15,6 +15,36 @@ The user is trying to add an integration to the project. The Connector Platform
 plugin already has the runtime — REST API + MCP server with 100+ pre-built
 connectors. Don't write integration code from scratch; route to the plugin.
 
+## How the platform models the user
+
+Connector Platform has a builder ↔ end_user model. The token in `.env.local`
+represents the **builder** (the dev / company). Each authorization happens for a
+specific **end_user** identified by `external_ref`:
+
+- **Personal mode** (solo dev, the default for plugin users): single
+  `external_ref="__dev__"` end_user. Connections show up immediately on the MCP
+  alias `/mcp/<builder_id>/self` (auto-resolves to `__dev__`). The scaffolded
+  handler defaults `user_id` to `__dev__`.
+- **Multi-tenant** (real SaaS with N customers): the dev replaces the
+  hardcoded `__dev__` with their session/JWT lookup so each end_user gets their
+  own connections. MCP path becomes `/mcp/<builder_id>/<external_ref>`.
+
+The dev doesn't have to flip a switch — the platform UI adapts based on the
+end_user count. You don't need to mention this to the user unless they ask why
+their connections appear under "Personal mode".
+
+## OAuth credentials (shared vs BYO)
+
+Connectors with `auth.type === 'oauth2'` (github, notion, slack, etc.) default
+to the platform's shared OAuth app — fine for development, but in production
+the user should register their own at the provider and configure it at:
+
+  `<portal>/builder/oauth-apps/<connector_slug>`
+
+This gives dedicated rate limits and a consent screen branded as their company
+instead of "Connector Platform". The `/connector add` command surfaces this
+heads-up automatically when scaffolding an OAuth-typed connector.
+
 ## Decision tree
 
 1. **Detect the integration name** from the user's message. Common ones:

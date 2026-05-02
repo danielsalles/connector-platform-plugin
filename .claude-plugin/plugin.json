@@ -1,0 +1,14 @@
+{
+  "name": "connector-platform",
+  "version": "0.1.0",
+  "description": "Add 100+ pre-built integrations (Notion, Slack, Linear, GitHub, etc) to your app with one slash command. Powered by Connector Platform.",
+  "author": {
+    "name": "Daniel Salles",
+    "email": "eu@danielbastos.me",
+    "url": "https://github.com/danielsalles"
+  },
+  "homepage": "https://connector-portal.plataform-connect.workers.dev",
+  "repository": "https://github.com/danielsalles/connector-platform-plugin",
+  "license": "MIT",
+  "keywords": ["mcp", "integrations", "saas", "connectors", "oauth", "claude-code"]
+}
